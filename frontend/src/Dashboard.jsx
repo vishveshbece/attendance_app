@@ -10,7 +10,7 @@ function Dashboard() {
     const [showAddForm, setShowAddForm] = useState(false);
     const addintern = async () =>{
       try {
-        const response = await axios.post("http://localhost:7000/api/users", { Name: name, college: college, id:id,mobile:mobile,email:email });
+        const response = await axios.post("https://attendance-app-gqu0.onrender.com/api/users", { Name: name, college: college, id:id,mobile:mobile,email:email });
         if (response.status === 200) {
             alert("intern data saved");
             setShowAddForm(false);
@@ -99,7 +99,7 @@ function Dashboard() {
     };
     const recorder = async()=>{
       try{
-        const response = await axios.get("http://localhost:7000/api/users/get");
+        const response = await axios.get("https://attendance-app-gqu0.onrender.com/api/users/get");
         if(response.status === 200){
           return response.data.users;
         }

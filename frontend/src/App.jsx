@@ -14,7 +14,7 @@ function App() {
     const [login,setlogin] = useState(false);
     const handleuser = async (user,password) => {
         try {
-            const response = await axios.post("http://localhost:7000/api/users/login", { email: user, mobile: password });
+            const response = await axios.post("https://attendance-app-gqu0.onrender.com/api/users/login", { email: user, mobile: password });
             if (response.status === 200) {
                 setlogin(true);
                 localStorage.setItem('user',user);
@@ -29,7 +29,7 @@ function App() {
     const handlescan = async(result)=>{
       try {
         const user = localStorage.getItem('user');
-          const response = await axios.post("http://localhost:7000/api/users/update",{username:user,date:result});
+          const response = await axios.post("https://attendance-app-gqu0.onrender.com/api/users/update",{username:user,date:result});
           if(response.status === 200){
             alert('your attendance has been saved');
           }
@@ -39,7 +39,7 @@ function App() {
     }
     const handleadmin = async (user,password) => {
         try {
-            const response = await axios.post("http://localhost:7000/api/admins", { username: user, password: password });
+            const response = await axios.post("https://attendance-app-gqu0.onrender.com/api/admins", { username: user, password: password });
             if (response.status === 200) {
                 setlogin(true);
                 localStorage.setItem('admin',user);
