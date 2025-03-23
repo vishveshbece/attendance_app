@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const QRCode = require('qrcode');
 const cors = require('cors');
 const app = express();
-app.use(cors({origin:"https://college-attendance-nu.vercel.app"}));
+app.use(cors({origin:"https://attendance-app-lake.vercel.app"}));
 app.use(express.json());
 mongoose.connect("mongodb+srv://vishveshbece:Vishvesh%402005@cluster0.fwpiw.mongodb.net/attendance?retryWrites=true&w=majority",{ useNewUrlParser: true, useUnifiedTopology: true },{
     connectTimeoutMS : 10000,
