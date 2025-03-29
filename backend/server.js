@@ -81,6 +81,7 @@ app.post('/api/users/update',async(req,res)=>{
         if(!user){
             res.status(400).json({message:'User not found'});
         }
+        console.log(user);
         user.dailyAttendance.push(date);
         await user.save();
         res.status(200).json({message:'succeed successfully'});

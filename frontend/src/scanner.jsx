@@ -10,51 +10,44 @@ const QRCodeScanner = ({ onscan }) => {
     if (lastScan) {
       const lastScanTime = new Date(lastScan).getTime();
       const currentTime = Date.now();
-
-      // Check if more than 24 hours (86400 seconds) have passed
       if ((currentTime - lastScanTime) / 1000 >= 86400) {
-        setScanResult(false); // Reset scan state
+        setScanResult(false); 
       } else {
-        setScanResult(true); // User already scanned within 24 hours
+        setScanResult(true);
       }
     }
   }, []);
-
   useEffect(() => {
     if (!scanResult) {
       const scanner = new Html5QrcodeScanner("qr-reader", {
         fps: 10,
         qrbox: 250,
       });
-
       scanner.render(
         (result) => {
           const scannedTime = new Date(result).getTime();
           const timeDiff = (Date.now() - scannedTime) / 1000;
-
           if (timeDiff <= 5) {
             localStorage.setItem("date", new Date().toISOString());
             setScanResult(true);
             onscan(result);
-            scanner.clear(); // Stop scanning after success
+            scanner.clear();
           }
         },
         (error) => {
           console.error("QR Scanner Error:", error);
         }
       );
-
       return () => {
-        scanner.clear(); // Cleanup on unmount
+        scanner.clear();
       };
     }
   }, [scanResult, onscan]);
-
   return (
     <>
       {localStorage.getItem("user") ? (
         <div>
-          {!scanResult ? (
+          {scanResult ? (
             <div id="qr-reader" style={{ width: "100%" }}></div>
           ) : (
             <p>You have already scanned today</p>
