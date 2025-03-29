@@ -7,7 +7,7 @@ const QRCodeScanner = ({ onscan }) => {
   useEffect(() => {
     const lastScan = localStorage.getItem("date");
 
-    if (lastScan) {
+    if (!lastScan) {
       const lastScanTime = new Date(lastScan).getTime();
       const currentTime = Date.now();
       if ((currentTime - lastScanTime) / 1000 >= 86400) {
