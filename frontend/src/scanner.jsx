@@ -7,48 +7,52 @@ const QRCodeScanner = ({ onscan }) => {
   useEffect(() => {
     const lastScan = localStorage.getItem("date");
 
-    if (!lastScan) {
+    if (lastScan) {
       const lastScanTime = new Date(lastScan).getTime();
       const currentTime = Date.now();
       if ((currentTime - lastScanTime) / 1000 >= 86400) {
-        setScanResult(false); 
+        setScanResult(false); // Allow scanning after 24 hours
       } else {
-        setScanResult(true);
+        setScanResult(true); // Prevent scanning again
       }
     }
   }, []);
+
   useEffect(() => {
     if (!scanResult) {
       const scanner = new Html5QrcodeScanner("qr-reader", {
         fps: 10,
         qrbox: 250,
       });
+
       scanner.render(
         (result) => {
-          const scannedTime = new Date(result).getTime();
-          const timeDiff = (Date.now() - scannedTime) / 1000;
-          if (timeDiff <= 5) {
-            localStorage.setItem("date", new Date().toISOString());
-            setScanResult(true);
-            onscan(result);
-            scanner.clear();
-          }
+          console.log("QR Code Scanned:", result);
+          localStorage.setItem("date", new Date().toISOString()); // Store scan timestamp
+          setScanResult(true);
+          onscan(result);
+          scanner.clear();
         },
         (error) => {
           console.error("QR Scanner Error:", error);
         }
       );
+
       return () => {
         scanner.clear();
       };
     }
   }, [scanResult, onscan]);
+
   return (
     <>
       {localStorage.getItem("user") ? (
         <div>
-          {scanResult ? (
-            <div id="qr-reader" style={{ width: "100%" }}></div>
+          {!scanResult ? (
+            <>
+              <div id="qr-reader" style={{ width: "100%" }}></div>
+              <p>Scanning...</p>
+            </>
           ) : (
             <p>You have already scanned today</p>
           )}
