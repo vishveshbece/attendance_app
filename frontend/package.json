@@ -12,7 +12,9 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.0.15",
     "axios": "^1.8.4",
+    "components": "^0.1.0",
     "html5-qrcode": "^2.3.8",
+    "lucide-react": "^0.518.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-qr-code": "^2.0.15",
