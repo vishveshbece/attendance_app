@@ -98,15 +98,15 @@ app.get('/api/users/get/id', async (req, res) => {
   try {
     const user = await User.findOne({ email: username });
     if (!user) return res.status(404).json({ message: "User not found" });
-
+    const users = await User.find();
     // Get today's date string in Asia/Kolkata timezone
     const today = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
 
     // Check if user already scanned today or device used today
     let alreadyScanned = false;
     let reason = null;
-
-    for (const entry of user.dailyAttendance) {
+    for(const user1 of users){
+      for (const entry of user1.dailyAttendance) {
       const [dateStr1,datestr2,datastr3, deviceId] = entry.split("/");
       const dateStr = dateStr1+datestr2+datastr3;
       if (dateStr === today && deviceId === device) {
@@ -125,6 +125,10 @@ app.get('/api/users/get/id', async (req, res) => {
         break;
       }
     }
+    if(alreadyScanned){
+      break;
+    }
+  }
 
     return res.status(200).json({ alreadyScanned, reason });
   } catch (error) {
