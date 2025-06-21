@@ -39,8 +39,6 @@ const connectDB = async () => {
 // Call the connection function
 connectDB();
 
-// ... rest of your schema and route code remains the same ...
-
 // Schemas
 const userSchema = new mongoose.Schema({
   Name: String,
