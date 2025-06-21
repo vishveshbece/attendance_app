@@ -1,55 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import axios from "axios";
 
-// Set base URL for API calls
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:7000";
-
-const QRCodeScanner = ({ user }) => {
-  const [scanResult, setScanResult] = useState(false);
-  const [status, setStatus] = useState("");
+const Scanner = ({ onscan, user, loading }) => {
+  const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!scanResult && user) {
+    if (user?._id && !scanResult) {
       const scanner = new Html5QrcodeScanner("qr-reader", {
         fps: 10,
         qrbox: 250,
       });
 
       const onScanSuccess = async (result) => {
-        console.log("QR Code Scanned:", result);
-        setScanResult(true);
-        setStatus("Processing attendance...");
-        setError("");
-
         try {
-          const response = await axios.post(`${API_BASE_URL}/api/attendance`, {
-            userId: user._id, // Changed from user.id to user._id
-            qrData: result,
-          }, {
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-
-          if (response.data.success) {
-            setStatus("Attendance marked successfully!");
-          } else {
-            setStatus("Attendance failed");
-            setError(response.data.message || "Unknown error");
-          }
+          setError("");
+          await onscan(result);
+          setScanResult(true);
         } catch (err) {
-          console.error("API Error:", err);
-          let errorMsg = "Error sending data to server";
-          
-          if (err.response) {
-            errorMsg = err.response.data.message || errorMsg;
-          } else if (err.request) {
-            errorMsg = "No response from server";
-          }
-          
-          setStatus(errorMsg);
           setError(err.message);
         } finally {
           scanner.clear();
@@ -57,7 +25,6 @@ const QRCodeScanner = ({ user }) => {
       };
 
       const onScanError = (err) => {
-        console.error("QR Scanner Error:", err);
         setError(err.message);
       };
 
@@ -67,39 +34,47 @@ const QRCodeScanner = ({ user }) => {
         scanner.clear();
       };
     }
-  }, [scanResult, user]);
+  }, [user, scanResult, onscan]);
 
-  if (!user) {
-    return <p className="text-center mt-10">Please log in to scan QR codes</p>;
+  const resetScanner = () => {
+    setScanResult(null);
+    setError("");
+  };
+
+  if (!user?._id) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-red-500">Please login to use the scanner</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-xl mx-auto p-4">
+    <div className="max-w-md mx-auto p-4">
       {!scanResult ? (
         <>
-          <div id="qr-reader" style={{ width: "100%" }}></div>
-          <p className="text-center mt-2 text-gray-700">
-            Scan your QR code to mark attendance
-          </p>
+          <div id="qr-reader" className="w-full mb-4"></div>
+          {loading && <p className="text-center">Processing...</p>}
         </>
       ) : (
-        <div className="text-center mt-4">
-          <p className={status.includes("success") ? "text-green-700 font-semibold" : "text-red-700 font-semibold"}>
-            {status}
-          </p>
-          {error && (
-            <p className="text-sm text-gray-600 mt-2">Error: {error}</p>
-          )}
-          <button 
-            onClick={() => setScanResult(false)}
+        <div className="text-center p-4 bg-green-100 text-green-800 rounded-lg">
+          <p className="font-semibold">Scan successful!</p>
+          <button
+            onClick={resetScanner}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={loading}
           >
             Scan Again
           </button>
+        </div>
+      )}
+      {error && (
+        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded">
+          {error}
         </div>
       )}
     </div>
   );
 };
 
-export default QRCodeScanner;
+export default Scanner;

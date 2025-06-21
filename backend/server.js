@@ -8,7 +8,7 @@ const app = express();
 // CORS Configuration
 const allowedOrigins = [
   "https://attendance-app-lake.vercel.app",
-  "http://localhost:3000"
+  "http://localhost:5173"
 ];
 
 app.use(cors({
