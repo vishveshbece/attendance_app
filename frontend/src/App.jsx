@@ -1,5 +1,6 @@
 // App.jsx
 import React, { useEffect, useState } from 'react';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { Link, Routes, Route, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdminDashboard from './AdminDashboard';
@@ -33,9 +34,12 @@ function App() {
   const handlescan = async (result) => {
     try {
       const user = localStorage.getItem('user');
+      const fp = await FingerprintJS.load();
+      const device = (await fp.get()).visitorId;
       const response = await axios.post("https://attendance-app-gqu0.onrender.com/api/users/update", {
         username: user,
         date: result,
+        device: device
       });
       if (response.status === 200) {
         alert('Your attendance has been saved');
