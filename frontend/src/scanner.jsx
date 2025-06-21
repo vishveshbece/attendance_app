@@ -19,7 +19,16 @@ const QRCodeScanner = ({ onscan }) => {
           params: { username: user, device }
         });
 
-        if (!res.data.alreadyScanned) {
+        const { alreadyScanned, reason } = res.data;
+
+        if (alreadyScanned) {
+          if (reason === "user") {
+            alert("⚠️ You have already marked attendance today.");
+          } else if (reason === "device") {
+            alert("⚠️ This device has already been used for attendance today.");
+          }
+          setScanned(true);
+        } else {
           if (!Scanned) {
             const scanner = new Html5QrcodeScanner("qr-reader", {
               fps: 10,
@@ -41,13 +50,6 @@ const QRCodeScanner = ({ onscan }) => {
 
             return () => scanner.clear();
           }
-        } else {
-          if (res.data.reason === "user") {
-            alert("⚠️ You have already marked attendance today.");
-          } else if (res.data.reason === "device") {
-            alert("⚠️ This device has already been used for attendance today.");
-          }
-          setScanned(true);
         }
       } catch (error) {
         console.error("Error checking scan status:", error);

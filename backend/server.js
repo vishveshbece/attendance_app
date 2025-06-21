@@ -93,21 +93,39 @@ app.get('/api/users/get', async (req, res) => {
 
 // Update Attendance
 app.get('/api/users/get/id', async (req, res) => {
-  const { username, device } = req.query; // use .query since it's a GET request
+  const { username, device } = req.query; // use query for GET
 
   try {
     const user = await User.findOne({ email: username });
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Get today's date string in Asia/Kolkata timezone
     const today = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
 
-    // Check if today's date is already in any attendance entry
-    const alreadyScanned = user.dailyAttendance.some(entry => {
-      const [dateStr, deviceId] = entry.split("/");
-      return dateStr === today || deviceId === device;
-    });
+    // Check if user already scanned today or device used today
+    let alreadyScanned = false;
+    let reason = null;
 
-    return res.status(200).json({ alreadyScanned });
+    for (const entry of user.dailyAttendance) {
+      const [dateStr, deviceId] = entry.split("/");
+      if (dateStr === today && deviceId === device) {
+        alreadyScanned = true;
+        reason = "both"; // same user + device scanned today
+        break;
+      }
+      if (dateStr === today) {
+        alreadyScanned = true;
+        reason = "user";  // user scanned today from any device
+        break;
+      }
+      if (deviceId === device) {
+        alreadyScanned = true;
+        reason = "device"; // device used for attendance today by any user
+        break;
+      }
+    }
+
+    return res.status(200).json({ alreadyScanned, reason });
   } catch (error) {
     return res.status(500).json({ message: 'Server error during user check' });
   }
