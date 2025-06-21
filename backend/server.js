@@ -92,15 +92,44 @@ app.get('/api/users/get', async (req, res) => {
 });
 
 // Update Attendance
+app.get('/api/users/get/id', async (req, res) => {
+  const { username, device } = req.query;
+
+  try {
+    const users = await User.find();
+    const today = new Date().toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" });
+
+    for (let user of users) {
+      if (!Array.isArray(user.dailyAttendance)) continue;
+
+      for (let entry of user.dailyAttendance) {
+        if (entry === `${today}/${device}`) {
+          // Same device already used today
+          return res.status(200).json({ alreadyScanned: true, reason: 'device' });
+        }
+        if (user.email === username && entry.startsWith(`${today}/`)) {
+          // Same user already marked attendance today
+          return res.status(200).json({ alreadyScanned: true, reason: 'user' });
+        }
+      }
+    }
+
+    // Safe to scan
+    res.status(200).json({ alreadyScanned: false });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during scan check' });
+  }
+});
+
+
 app.post('/api/users/update', async (req, res) => {
   const { username, date ,device} = req.body;
   try {
     const user = await User.findOne({ email: username });
-    const ld = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-    console.log(ld);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.dailyAttendance.push(ld+"/"+device);
+    user.dailyAttendance.push(date+"/"+device);
     await user.save();
 
     res.status(200).json({ message: 'Attendance recorded successfully' });

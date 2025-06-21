@@ -14,7 +14,7 @@ const QRCodePage = () => {
 
   // Generate a new QR code value
   const updateQRCodeData = () => {
-    const currentDateTime = new Date().toISOString();
+    const currentDateTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
     setData(currentDateTime);
   };
 
