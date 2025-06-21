@@ -107,7 +107,8 @@ app.get('/api/users/get/id', async (req, res) => {
     let reason = null;
 
     for (const entry of user.dailyAttendance) {
-      const [dateStr, deviceId] = entry.split("/");
+      const [dateStr1,datestr2,datastr3, deviceId] = entry.split("/");
+      const dateStr = dateStr1+datestr2+datastr3;
       if (dateStr === today && deviceId === device) {
         alreadyScanned = true;
         reason = "both"; // same user + device scanned today
@@ -141,7 +142,8 @@ app.post('/api/users/update', async (req, res) => {
 
     // Avoid double insert
     const alreadyScanned = user.dailyAttendance.some(entry => {
-      const [dateStr, deviceId] = entry.split("/");
+      const [dateStr1,datastr2,dayestr3, deviceId] = entry.split("/");
+      const dateStr = dateStr1+datastr2+dayestr3;
       return dateStr === today || deviceId === device;
     });
 
