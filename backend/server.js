@@ -121,7 +121,7 @@ app.get('/api/users/get/id', async (req, res) => {
   }
   for(const entry of user.dailyAttendance){
       const [dateStr1,datestr2,datastr3, deviceId] = entry.split("/");
-      const dateStr = dateStr1+datestr2+datastr3;
+      const dateStr = dateStr1+"/"+datestr2+"/"+datastr3;
       if(dateStr == today){
         alreadyScanned = true;
         reason = "user"; 
