@@ -1,189 +1,146 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const Dashboard = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    Name: '',
-    college: '',
-    id: '',
-    mobile: '',
-    email: ''
-  });
+function Dashboard() {
+  const [records, setRecords] = useState([]);
+  const [name, setName] = useState('');
+  const [id, setId] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const [college, setCollege] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  // Fetch all users with attendance
-  const fetchUsers = async () => {
+  const addIntern = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get('/api/users');
-      if (response.data.success) {
-        setUsers(response.data.users);
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch users');
+      const response = await axios.post(
+        "https://attendance-app-gqu0.onrender.com/api/users",
+        { Name: name, college: college, id: id, mobile: mobile, email: email }
+      );
+      if (response.status === 200) {
+        alert("Intern data saved");
+        setShowAddForm(false);
+        fetchRecords(); // refresh records after adding
       }
     } catch (err) {
-      console.error('Fetch error:', err);
-      setError(err.response?.data?.message || err.message || 'Error loading data');
-    } finally {
-      setLoading(false);
+      console.error(err);
     }
   };
 
-  // Add new user
-  const addUser = async () => {
+  const fetchRecords = async () => {
     try {
-      setLoading(true);
-      setError('');
-      
-      // Validate required fields
-      if (!Object.values(formData).every(field => field.trim())) {
-        throw new Error('All fields are required');
-      }
-
-      const response = await axios.post('/api/users', formData);
-      if (response.status === 201) {
-        await fetchUsers(); // Refresh list
-        setFormData({
-          Name: '',
-          college: '',
-          id: '',
-          mobile: '',
-          email: ''
-        });
+      const response = await axios.get(
+        "https://attendance-app-gqu0.onrender.com/api/users/get"
+      );
+      if (response.status === 200) {
+        setRecords(response.data.users || []);
       }
     } catch (err) {
-      console.error('Add error:', err);
-      setError(err.response?.data?.message || err.message || 'Error adding user');
-    } finally {
-      setLoading(false);
+      console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchRecords();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const AddMemberForm = () => (
+    <div className="absolute top-0 left-0 w-full h-full bg-gray-200 bg-opacity-70 flex justify-center items-center z-10">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h3 className="text-lg font-semibold mb-4">Add Intern</h3>
 
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Attendance Dashboard</h1>
-      
-      {error && (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* User List Section */}
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Registered Users</h2>
-          {loading ? (
-            <p>Loading users...</p>
-          ) : users.length > 0 ? (
-            <div className="space-y-4">
-              {users.map(user => (
-                <div key={user._id} className="border-b pb-3">
-                  <h3 className="font-medium">{user.Name}</h3>
-                  <p>ID: {user.id}</p>
-                  <p>College: {user.college}</p>
-                  <div className="mt-2">
-                    <h4 className="text-sm font-semibold">Attendance:</h4>
-                    {user.dailyAttendance?.length > 0 ? (
-                      <ul className="text-sm">
-                        {user.dailyAttendance.map((date, i) => (
-                          <li key={i}>{new Date(date).toLocaleDateString()}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-gray-500">No attendance yet</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>No users found</p>
-          )}
-        </div>
-
-        {/* Add User Section */}
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Add New User</h2>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium">Full Name</label>
-              <input
-                type="text"
-                name="Name"
-                value={formData.Name}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">College</label>
-              <input
-                type="text"
-                name="college"
-                value={formData.college}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">ID Number</label>
-              <input
-                type="text"
-                name="id"
-                value={formData.id}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Mobile</label>
-              <input
-                type="tel"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-            </div>
-            <button
-              onClick={addUser}
-              disabled={loading}
-              className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {loading ? 'Adding...' : 'Add User'}
-            </button>
+        {[
+          { label: 'Name', value: name, setter: setName },
+          { label: 'College Name', value: college, setter: setCollege },
+          { label: 'ID No.', value: id, setter: setId },
+          { label: 'Mobile No.', value: mobile, setter: setMobile },
+          { label: 'Email ID', value: email, setter: setEmail }
+        ].map((field, i) => (
+          <div className="mb-3" key={i}>
+            <label className="block text-gray-700 font-semibold mb-1">
+              {field.label}
+            </label>
+            <input
+              type="text"
+              value={field.value}
+              onChange={(e) => field.setter(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-        </div>
+        ))}
+
+        <button
+          className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={addIntern}
+        >
+          Add Intern
+        </button>
+        <button
+          className="mt-3 w-full py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          onClick={() => setShowAddForm(false)}
+        >
+          Close
+        </button>
       </div>
     </div>
   );
-};
+
+  return (
+    <>
+      {localStorage.getItem('admin') ? (
+        <div className="min-h-screen p-6 bg-gray-100 relative">
+          <h2 className="text-2xl font-bold mb-4 text-center">Admin Dashboard</h2>
+
+          <div className="flex justify-center mb-6">
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-6 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600"
+            >
+              {showAddForm ? 'Close Add Intern Form' : 'Add Intern Member'}
+            </button>
+          </div>
+
+          {showAddForm && <AddMemberForm />}
+
+          <div className="grid gap-4">
+            {records.length > 0 ? (
+              records.map((record, index) => (
+                <div
+                  key={index}
+                  className="bg-white p-4 rounded-lg shadow-md"
+                >
+                  <h4 className="text-xl font-semibold text-blue-700 mb-2">{record.Name}</h4>
+                  <p><strong>Email:</strong> {record.email || 'N/A'}</p>
+                  <p><strong>Mobile:</strong> {record.mobile || 'N/A'}</p>
+                  <p><strong>College:</strong> {record.college || 'N/A'}</p>
+                  <p><strong>ID:</strong> {record.id || 'N/A'}</p>
+                  <div className="mt-2">
+                    <strong>Daily Attendance:</strong>
+                    <ul className="list-disc ml-5 text-sm">
+                      {Array.isArray(record.dailyAttendance) && record.dailyAttendance.length > 0 ? (
+                        record.dailyAttendance.map((att, i) => (
+                          <li key={i}>
+                            {i + 1}. {att}
+                          </li>
+                        ))
+                      ) : (
+                        <li>No attendance available</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-600">No intern records available.</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center mt-20 text-red-600 text-lg font-semibold">
+          You are not logged in as Admin
+        </div>
+      )}
+    </>
+  );
+}
 
 export default Dashboard;
