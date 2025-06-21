@@ -93,12 +93,12 @@ app.get('/api/users/get', async (req, res) => {
 
 // Update Attendance
 app.post('/api/users/update', async (req, res) => {
-  const { username, date } = req.body;
+  const { username, date ,device} = req.body;
   try {
     const user = await User.findOne({ email: username });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.dailyAttendance.push(date);
+    user.dailyAttendance.push(date+"/"+device);
     await user.save();
 
     res.status(200).json({ message: 'Attendance recorded successfully' });
