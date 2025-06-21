@@ -1,13 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const moment = require('moment'); // For date handling
 
 const app = express();
 
 // Enhanced CORS configuration
 const allowedOrigins = [
   "https://attendance-app-lake.vercel.app",
-  "http://localhost:3000" // Add your local development URL
+  "http://localhost:3000"
 ];
 
 app.use(cors({
@@ -23,30 +24,30 @@ app.use(cors({
 
 app.use(express.json());
 
-// MongoDB Connection with better options
+// MongoDB Connection
 mongoose.connect(
   "mongodb+srv://vishveshbece:Vishvesh@2005@cluster0.fwpiw.mongodb.net/attendance?retryWrites=true&w=majority",
   { 
     useNewUrlParser: true, 
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-    socketTimeoutMS: 45000 // Close sockets after 45s of inactivity
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000
   }
 ).then(() => {
   console.log("MongoDB connected");
 }).catch((error) => {
   console.error("Connection error:", error);
-  process.exit(1); // Exit if DB connection fails
+  process.exit(1);
 });
 
-// Schemas (unchanged)
+// Schemas
 const userSchema = new mongoose.Schema({
   Name: String,
   college: String,
   id: String,
   mobile: String,
   email: String,
-  dailyAttendance: [String],
+  dailyAttendance: [Date], // Changed to store Date objects
 });
 
 const adminSchema = new mongoose.Schema({
@@ -57,36 +58,244 @@ const adminSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Admin = mongoose.model('Admin', adminSchema);
 
-// Enhanced Create New User endpoint
+// ========== API Endpoints ========== //
+
+// 1. User Registration
 app.post('/api/users', async (req, res) => {
   try {
     const { Name, college, id, mobile, email } = req.body;
     
-    // Basic validation
     if (!Name || !college || !id || !mobile || !email) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     const existingUser = await User.findOne({ $or: [{ email }, { id }] });
     if (existingUser) {
-      return res.status(409).json({ message: "User with this email or ID already exists" });
+      return res.status(409).json({ 
+        success: false, 
+        message: "User with this email or ID already exists" 
+      });
     }
 
     const user = new User({ Name, college, id, mobile, email });
     await user.save();
-    res.status(201).json({ message: "Member saved successfully", user });
+    res.status(201).json({ 
+      success: true, 
+      message: "Member saved successfully", 
+      user 
+    });
   } catch (error) {
     console.error("Error saving user:", error);
-    res.status(500).json({ message: 'Server error while saving user', error: error.message });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while saving user', 
+      error: error.message 
+    });
   }
 });
 
-// Other endpoints with similar enhanced error handling...
+// 2. Admin Login
+app.post('/api/admins/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Username and password are required' 
+      });
+    }
+
+    const admin = await Admin.findOne({ username });
+    if (!admin) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Admin not found' 
+      });
+    }
+
+    if (password !== admin.password) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid credentials' 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Logged in successfully" 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error during admin login',
+      error: error.message
+    });
+  }
+});
+
+// 3. User Login
+app.post('/api/users/login', async (req, res) => {
+  try {
+    const { email, mobile } = req.body;
+    
+    if (!email || !mobile) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email and mobile are required" 
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    if (mobile !== user.mobile) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Incorrect mobile number" 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Logged in successfully",
+      user: {
+        _id: user._id,
+        Name: user.Name,
+        email: user.email,
+        id: user.id
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error during user login',
+      error: error.message
+    });
+  }
+});
+
+// 4. Get All Users (for admin)
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find({}, { dailyAttendance: 0 }); // Exclude attendance data
+    res.status(200).json({ 
+      success: true, 
+      users 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching users',
+      error: error.message
+    });
+  }
+});
+
+// 5. QR Code Attendance Endpoint
+app.post('/api/attendance', async (req, res) => {
+  try {
+    const { userId, qrData } = req.body;
+    
+    if (!userId || !qrData) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'User ID and QR data are required' 
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    // Validate QR data (add your own validation logic)
+    if (!isValidQR(qrData)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid QR code' 
+      });
+    }
+
+    // Check if already marked attendance today
+    const today = moment().startOf('day');
+    const hasAttendedToday = user.dailyAttendance.some(date => 
+      moment(date).isSameOrAfter(today)
+    );
+
+    if (hasAttendedToday) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Attendance already marked today' 
+      });
+    }
+
+    // Record attendance
+    user.dailyAttendance.push(new Date());
+    await user.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Attendance recorded successfully',
+      attendanceDate: new Date()
+    });
+  } catch (error) {
+    console.error('Attendance error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error during attendance recording',
+      error: error.message
+    });
+  }
+});
+
+// 6. Get User Attendance
+app.get('/api/users/:id/attendance', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id, { dailyAttendance: 1 });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      attendance: user.dailyAttendance 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching attendance',
+      error: error.message
+    });
+  }
+});
+
+// Helper function for QR validation
+function isValidQR(qrData) {
+  // Implement your QR validation logic here
+  // For now, just check if it's not empty
+  return qrData && qrData.trim().length > 0;
+}
 
 // Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  res.status(500).json({ 
+    success: false, 
+    message: 'Something went wrong!',
+    error: err.message
+  });
 });
 
 const PORT = process.env.PORT || 7000;
