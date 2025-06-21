@@ -109,19 +109,9 @@ app.get('/api/users/get/id', async (req, res) => {
       for (const entry of user1.dailyAttendance) {
       const [dateStr1,datestr2,datastr3, deviceId] = entry.split("/");
       const dateStr = dateStr1+datestr2+datastr3;
-      if (dateStr === today && deviceId === device) {
-        alreadyScanned = true;
-        reason = "both"; // same user + device scanned today
-        break;
-      }
-      if (dateStr === today) {
-        alreadyScanned = true;
-        reason = "user";  // user scanned today from any device
-        break;
-      }
       if (deviceId === device) {
         alreadyScanned = true;
-        reason = "device"; // device used for attendance today by any user
+        reason = "device"; // same user + device scanned today
         break;
       }
     }
@@ -129,7 +119,15 @@ app.get('/api/users/get/id', async (req, res) => {
       break;
     }
   }
-
+  for(const entry of user.dailyAttendance){
+      const [dateStr1,datestr2,datastr3, deviceId] = entry.split("/");
+      const dateStr = dateStr1+datestr2+datastr3;
+      if(dateStr == today){
+        alreadyScanned = true;
+        reason = "user"; // same user + device scanned today
+        break;
+      }
+  }
     return res.status(200).json({ alreadyScanned, reason });
   } catch (error) {
     return res.status(500).json({ message: 'Server error during user check' });
