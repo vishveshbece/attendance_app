@@ -104,7 +104,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home onUserLogin={handleuser} onAdminLogin={handleadmin} />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/scanner" element={<Scanner onscan={handlescan} />} />
+        <Route path="/scanner" element={<Scanner onscan={handlescan} user={{ id: localStorage.getItem('user') }} />} />
         <Route path="/AdminDashboard/*" element={<AdminDashboard />} />
         <Route path="/adminlogin" element={<AdminLogin onadmin={handleadmin} />} />
         <Route path="/userlogin" element={<UserLogin onuser={handleuser} />} />
