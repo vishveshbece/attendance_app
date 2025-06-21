@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 
 const QRCodeScanner = ({ onscan }) => {
-  const [Scanned,setScanned] = useState('');
+  const [Scanned,setScanned] = useState(false);
+  const [attendance,setattendance] = useState(false);
   useEffect(() => {
     if (!Scanned) {
       const scanner = new Html5QrcodeScanner("qr-reader", {

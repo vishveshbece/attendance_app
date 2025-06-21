@@ -96,6 +96,9 @@ app.post('/api/users/update', async (req, res) => {
   const { username, date ,device} = req.body;
   try {
     const user = await User.findOne({ email: username });
+    const today = new Date();
+    const ld = today.toLocaleDateString();
+    console.log(ld);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     user.dailyAttendance.push(date+"/"+device);
