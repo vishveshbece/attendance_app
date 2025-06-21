@@ -4,7 +4,7 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 const QRCodeScanner = ({ onscan }) => {
   const [Scanned,setScanned] = useState('');
   useEffect(() => {
-    if (Scanned) {
+    if (!Scanned) {
       const scanner = new Html5QrcodeScanner("qr-reader", {
         fps: 10,
         qrbox: 250,
