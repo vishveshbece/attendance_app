@@ -96,12 +96,11 @@ app.post('/api/users/update', async (req, res) => {
   const { username, date ,device} = req.body;
   try {
     const user = await User.findOne({ email: username });
-    const today = new Date();
-    const ld = today.toLocaleDateString();
+    const ld = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
     console.log(ld);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.dailyAttendance.push(date+"/"+device);
+    user.dailyAttendance.push(ld+"/"+device);
     await user.save();
 
     res.status(200).json({ message: 'Attendance recorded successfully' });
