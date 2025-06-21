@@ -1,44 +1,45 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const moment = require('moment'); // For date handling
+const moment = require('moment');
 
 const app = express();
 
-// Enhanced CORS configuration
+// CORS Configuration
 const allowedOrigins = [
   "https://attendance-app-lake.vercel.app",
   "http://localhost:3000"
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: allowedOrigins,
   credentials: true
 }));
 
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(
-  "mongodb+srv://vishveshbece:Vishvesh@2005@cluster0.fwpiw.mongodb.net/attendance?retryWrites=true&w=majority",
-  { 
-    useNewUrlParser: true, 
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000
+// MongoDB Connection - Fixed
+const connectDB = async () => {
+  try {
+    // Properly encode the password (replace @ with %40)
+    const password = encodeURIComponent("Vishvesh@2005");
+    const connectionString = `mongodb+srv://vishveshbece:${password}@cluster0.fwpiw.mongodb.net/attendance?retryWrites=true&w=majority`;
+    
+    await mongoose.connect(connectionString, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000
+    });
+    console.log("MongoDB connected successfully");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    process.exit(1);
   }
-).then(() => {
-  console.log("MongoDB connected");
-}).catch((error) => {
-  console.error("Connection error:", error);
-  process.exit(1);
-});
+};
+
+// Call the connection function
+connectDB();
+
+// ... rest of your schema and route code remains the same ...
 
 // Schemas
 const userSchema = new mongoose.Schema({
