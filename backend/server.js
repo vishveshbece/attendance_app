@@ -108,10 +108,10 @@ app.get('/api/users/get/id', async (req, res) => {
     for(const user1 of users){
       for (const entry of user1.dailyAttendance) {
       const [dateStr1,datestr2,datastr3, deviceId] = entry.split("/");
-      const dateStr = dateStr1+datestr2+datastr3;
+      const dateStr = dateStr1+"/"+datestr2+"/"+datastr3;
       if (deviceId === device) {
         alreadyScanned = true;
-        reason = "device"; // same user + device scanned today
+        reason = "device";
         break;
       }
     }
@@ -124,7 +124,7 @@ app.get('/api/users/get/id', async (req, res) => {
       const dateStr = dateStr1+datestr2+datastr3;
       if(dateStr == today){
         alreadyScanned = true;
-        reason = "user"; // same user + device scanned today
+        reason = "user"; 
         break;
       }
   }
